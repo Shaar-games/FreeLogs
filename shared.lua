@@ -5,6 +5,7 @@ FREELOGS = {}
 FREELOGS.Kills = {}
 FREELOGS.Teams = {}
 FREELOGS.Connect = {}
+FREELOGS.Props = {}
 
 local function PlayerDeath( victim, inflictor, attacker )
 
@@ -37,10 +38,6 @@ local function PlayerConnect( name, ip )
 			local TimeString = os.date( "%H:%M:%S - %d/%m/%Y" , Timestamp )
 
 			FREELOGS.Connect[table.Count(FREELOGS.Connect) + 1] =  TimeString .. " - " .. name .. " has joined the game. "
-			util.AddNetworkString( "FREELOGS.Connect" )
-			net.Start( "FREELOGS.Connect" , true)
-			net.WriteTable( table.Reverse( FREELOGS.Connect) )
-			net.Broadcast()
 end
 
 local function Disconnected( ply )
@@ -48,11 +45,6 @@ local function Disconnected( ply )
 			local Timestamp = os.time()
 			local TimeString = os.date( "%H:%M:%S - %d/%m/%Y" , Timestamp )
 
-			FREELOGS.Connect[table.Count(FREELOGS.Connect) + 1] =  TimeString .. " - " .. ply:Name() .. " has left the server. "
-			util.AddNetworkString( "FREELOGS.Connect" )
-			net.Start( "FREELOGS.Connect" , true)
-			net.WriteTable( table.Reverse( FREELOGS.Connect) )
-			net.Broadcast()
 end
 
 net.Receive( "FREELOGS.Kills", function( len, ply )
@@ -95,6 +87,11 @@ net.Receive( "Menus", function( len, ply )
 		 end
 
 		 if net.ReadString() == "Props" then
+		 	util.AddNetworkString( "FREELOGS.Props" )
+			net.Start( "FREELOGS.Props" , true)
+			net.WriteTable( table.Reverse( ents.GetAll()) )
+			net.Broadcast()
+			print(net.ReadString())
 
 		 end
 
@@ -134,23 +131,25 @@ if CLIENT then
 
 	local function SetContent( table )
 
-		DScrollPanelRight:Clear()
+		if Logs:IsActive() then
+			DScrollPanelRight:Clear()
 
-		for k,v in pairs( table ) do
-			local DButton = DScrollPanelRight:Add( "DButton" )
-			DButton:SetIcon( "https://image.flaticon.com/icons/png/512/235/235251.png" )
-			DButton:SetText( v )
-			DButton:SetContentAlignment( 4 )
-			DButton:SetTextColor( Color( 200 , 200 , 200, 255))
-			DButton:SetSize( ScrW()/20 , ScrH()/50 )
-			DButton:Dock( TOP )
-			DButton:DockMargin( 0, 0, 0, 2 )
-			DButton.Paint = function (s , w , h)
-		    	draw.RoundedBox(0 ,0 ,0 ,w + 120 ,h + 120 , Color( 0 , 0 , 0 , 255 ) )
-			end
+			for k,v in pairs( table ) do
+				local DButton = DScrollPanelRight:Add( "DButton" )
+				DButton:SetIcon( "https://image.flaticon.com/icons/png/512/235/235251.png" )
+				DButton:SetText( v )
+				DButton:SetContentAlignment( 4 )
+				DButton:SetTextColor( Color( 200 , 200 , 200, 255))
+				DButton:SetSize( ScrW()/20 , ScrH()/50 )
+				DButton:Dock( TOP )
+				DButton:DockMargin( 0, 0, 0, 2 )
+				DButton.Paint = function (s , w , h)
+			    	draw.RoundedBox(0 ,0 ,0 ,w + 120 ,h + 120 , Color( 0 , 0 , 0 , 255 ) )
+				end
 
-			function DButton:DoClick()
-				SetClipboardText( self:GetText() )
+				function DButton:DoClick()
+					SetClipboardText( self:GetText() )
+				end
 			end
 		end
 	end
@@ -161,18 +160,28 @@ if CLIENT then
 		FREELOGS.Kills = {}
 		FREELOGS.Teams = {}
 		FREELOGS.Connect = {}
+		FREELOGS.Props = {}
 
 	net.Receive( "FREELOGS.Kills", function( len, ply )
-		  FREELOGS.Kills =  net.ReadTable()
-		 PrintTable(FREELOGS.Kills)
-		 SetContent( FREELOGS.Kills )
+		FREELOGS.Kills =  net.ReadTable()
+		PrintTable(FREELOGS.Kills)
+		SetContent( FREELOGS.Kills )
 	end )
 
 	net.Receive( "FREELOGS.Teams", function( len, ply )
-		  FREELOGS.Teams =  net.ReadTable()
-		 PrintTable(FREELOGS.Teams)
+		FREELOGS.Teams =  net.ReadTable()
+		PrintTable(FREELOGS.Teams)
 	end )
 
+	net.Receive( "FREELOGS.Connect", function( len, ply )
+		FREELOGS.Connect =  net.ReadTable()
+		PrintTable(FREELOGS.Connect)
+	end )
+
+	net.Receive( "FREELOGS.Props", function( len, ply )
+		FREELOGS.Props =  net.ReadTable()
+		PrintTable(FREELOGS.Props)
+	end )
 
 
 
@@ -211,7 +220,6 @@ if CLIENT then
 				net.Start( "Menus" , true)
 				net.WriteString(DButton:GetText())
 				net.SendToServer()
-				print("vararg args")
 			end
 		end
 
