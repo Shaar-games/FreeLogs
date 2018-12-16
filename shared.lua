@@ -19,11 +19,6 @@ local function PlayerDeath( victim, inflictor, attacker )
 				FREELOGS.Kills[table.Count(FREELOGS.Kills) + 1] =  TimeString .. " - " .. tostring(victim:Name()) .. " was killed by " .. tostring(attacker:GetClass()) .." using ".. tostring(inflictor:GetClass())
 			end
 
-			util.AddNetworkString( "FREELOGS.Kills" )
-			net.Start( "FREELOGS.Kills" , true)
-			net.WriteTable( table.Reverse( FREELOGS.Kills) )
-			net.Broadcast()
-
 end
 
 local function OnPlayerChangedTeam( ply, oldTeam, newTeam )
@@ -33,10 +28,7 @@ local function OnPlayerChangedTeam( ply, oldTeam, newTeam )
 
 			FREELOGS.Teams[table.Count(FREELOGS.Teams) + 1] =  TimeString .. " - " .. ply:Name() .. " Change team from " .. team.GetName( oldTeam )  .." to ".. team.GetName( newTeam )
 
-			util.AddNetworkString( "FREELOGS.Teams" )
-			net.Start( "FREELOGS.Teams" , true)
-			net.WriteTable( table.Reverse( FREELOGS.Teams) )
-			net.Broadcast()
+
 end
 
 local function PlayerConnect( name, ip )
@@ -90,6 +82,41 @@ net.Receive( "Menus", function( len, ply )
 			print(net.ReadString())
 		 end
 
+		 if net.ReadString() == "Degas" then
+
+		 end
+
+		 if net.ReadString() == "Chat" then
+
+		 end
+
+		 if net.ReadString() == "Propkill" then
+
+		 end
+
+		 if net.ReadString() == "Props" then
+
+		 end
+
+		 if net.ReadString() == "Connection" then
+		 	util.AddNetworkString( "FREELOGS.Teams" )
+			net.Start( "FREELOGS.Teams" , true)
+			net.WriteTable( table.Reverse( FREELOGS.Connect) )
+			net.Broadcast()
+			print(net.ReadString())
+
+		 end
+
+		 if net.ReadString() == "Team" then
+		 	util.AddNetworkString( "FREELOGS.Teams" )
+			net.Start( "FREELOGS.Teams" , true)
+			net.WriteTable( table.Reverse( FREELOGS.Teams) )
+			net.Broadcast()
+			print(net.ReadString())
+
+		 end
+
+
 	end )
 
 
@@ -108,7 +135,7 @@ if CLIENT then
 	local function SetContent( table )
 
 		DScrollPanelRight:Clear()
-		
+
 		for k,v in pairs( table ) do
 			local DButton = DScrollPanelRight:Add( "DButton" )
 			DButton:SetIcon( "https://image.flaticon.com/icons/png/512/235/235251.png" )
