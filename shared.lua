@@ -1,5 +1,7 @@
 if SERVER then
 
+FREELOGS = {}
+
 FREELOGS.Kills = {}
 FREELOGS.Teams = {}
 FREELOGS.Connect = {}
@@ -75,7 +77,21 @@ net.Receive( "FREELOGS.Kills", function( len, ply )
 		 PrintTable(FREELOGS.Kills)
 	end )
 
-util.AddNetworkString( "Menus" )
+
+	util.AddNetworkString( "Menus" )
+
+net.Receive( "Menus", function( len, ply )
+	
+		 if net.ReadString() == "Kills" then
+		 	util.AddNetworkString( "FREELOGS.Kills" )
+			net.Start( "FREELOGS.Kills" , true)
+			net.WriteTable( table.Reverse( FREELOGS.Kills) )
+			net.Broadcast()
+			print(net.ReadString())
+		 end
+
+	end )
+
 
 hook.Add("PlayerDeath","Freelogs",PlayerDeath)
 
@@ -88,63 +104,11 @@ end
 
 if CLIENT then
 
-	Menus = { "Kills", "Degas", "Chat", "Propkill", "Props" , "Connection" , "Team" }
 
-	if !FREELOGS.Kills then 
-		FREELOGS.Kills = {}
-	end
+	local function SetContent( table )
 
-	net.Receive( "FREELOGS.Kills", function( len, ply )
-		  FREELOGS.Kills =  net.ReadTable()
-		 PrintTable(FREELOGS.Kills)
-	end )
-
-	net.Receive( "FREELOGS.Teams", function( len, ply )
-		  FREELOGS.Teams =  net.ReadTable()
-		 PrintTable(FREELOGS.Teams)
-	end )
-
-	local function Freelogs( table )
-
-	Logs = vgui.Create( "DFrame" )
-	Logs:SetSize( ScrW()/2 , ScrH()/2 )
-	Logs:Center()
-	Logs:MakePopup()
-	Logs:SetTitle( "" )
-	Logs:ShowCloseButton( false )
-	Logs.Paint = function (s , w , h)
-	    draw.RoundedBox(0 ,0 ,0 ,w + 120 ,h + 120 ,Color( 0 , 0 , 0 , 200))
-	end
-
-	local DScrollPanel = vgui.Create( "DScrollPanel", Logs )
-	DScrollPanel:SetSize( ScrW()/6, ScrW()/3.7 )
-
-		for k, v in pairs( Menus ) do
-			local DButton = DScrollPanel:Add( "DButton" )
-			DButton:SetIcon( "https://image.flaticon.com/icons/png/512/235/235251.png" )
-			DButton:SetText( v )
-			DButton:SetTextColor( Color( 200 , 200 , 200, 255))
-			DButton:SetSize( ScrW()/20 , ScrH()/20 )
-			DButton:Dock( TOP )
-			DButton:DockMargin( 0, 0, 0, 2 )
-			DButton.Paint = function (s , w , h)
-		    draw.RoundedBox(0 ,0 ,0 ,w + 120 ,h + 120 , Color( 0 , 0 , 0 , 255 ) )
-			end
-
-			function DButton:DoClick()
-				util.NetworkStringToID( "Menus" )
-				net.Start( DButton:GetText() , true)
-				net.WriteString(DButton:GetText())
-				net.SendToServer()
-
-			end
-		end
-
-
-	local DScrollPanelRight = vgui.Create( "DScrollPanel", Logs )
-	DScrollPanelRight:SetSize( ScrW()/3, ScrW()/3.7 )
-	DScrollPanelRight:SetPos( ScrW()/6, 0 )
-
+		DScrollPanelRight:Clear()
+		
 		for k,v in pairs( table ) do
 			local DButton = DScrollPanelRight:Add( "DButton" )
 			DButton:SetIcon( "https://image.flaticon.com/icons/png/512/235/235251.png" )
@@ -162,6 +126,72 @@ if CLIENT then
 				SetClipboardText( self:GetText() )
 			end
 		end
+	end
+
+	Menus = { "Kills", "Degas", "Chat", "Propkill", "Props" , "Connection" , "Team" }
+
+	 	FREELOGS = {}
+		FREELOGS.Kills = {}
+		FREELOGS.Teams = {}
+		FREELOGS.Connect = {}
+
+	net.Receive( "FREELOGS.Kills", function( len, ply )
+		  FREELOGS.Kills =  net.ReadTable()
+		 PrintTable(FREELOGS.Kills)
+		 SetContent( FREELOGS.Kills )
+	end )
+
+	net.Receive( "FREELOGS.Teams", function( len, ply )
+		  FREELOGS.Teams =  net.ReadTable()
+		 PrintTable(FREELOGS.Teams)
+	end )
+
+
+
+
+	local function Freelogs( )
+
+	Logs = vgui.Create( "DFrame" )
+	Logs:SetSize( ScrW()/2 , ScrH()/2 )
+	Logs:Center()
+	Logs:MakePopup()
+	Logs:SetTitle( "" )
+	Logs:ShowCloseButton( false )
+	Logs.Paint = function (s , w , h)
+	    draw.RoundedBox(0 ,0 ,0 ,w + 120 ,h + 120 ,Color( 0 , 0 , 0 , 200))
+	end
+
+	local DScrollPanel = vgui.Create( "DScrollPanel", Logs )
+	DScrollPanel:SetSize( ScrW()/6, ScrW()/3.7 )
+
+		for k, v in pairs( Menus ) do
+			local DButton = DScrollPanel:Add( "DButton" )
+			DButton:SetText( v )
+			DButton:SetTextColor( Color( 200 , 200 , 200, 255))
+			DButton:SetSize( ScrW()/20 , ScrH()/20 )
+			DButton:Dock( TOP )
+			DButton:DockMargin( 0, 0, 0, 2 )
+			DButton.Paint = function (s , w , h)
+				if DButton:IsHovered() then 
+					draw.RoundedBox(0 ,0 ,0 ,w + 120 ,h + 120 , Color( 200 , 0 , 0 , 255 ) )
+				else
+			    	draw.RoundedBox(0 ,0 ,0 ,w + 120 ,h + 120 , Color( 0 , 0 , 0 , 255 ) )
+				end
+			end
+
+			function DButton:DoClick()
+				util.NetworkStringToID( "Menus" )
+				net.Start( "Menus" , true)
+				net.WriteString(DButton:GetText())
+				net.SendToServer()
+				print("vararg args")
+			end
+		end
+
+
+	DScrollPanelRight = vgui.Create( "DScrollPanel", Logs )
+	DScrollPanelRight:SetSize( ScrW()/3, ScrW()/3.7 )
+	DScrollPanelRight:SetPos( ScrW()/6, 0 )
 
 	local DermaButton = vgui.Create( "DButton", Logs )
 	DermaButton:SetText( "Close" )	
@@ -177,6 +207,7 @@ if CLIENT then
 	end
 
 end
-	Freelogs( FREELOGS.Kills )
+
+	Freelogs( )
 
 end
